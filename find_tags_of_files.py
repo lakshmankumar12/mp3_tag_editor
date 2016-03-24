@@ -58,12 +58,12 @@ def grab_tags_of_file(max_lens, filename):
           max_lens[t] = l
       else:
         max_lens[t] = l
-      l = len(filename)
-      if l > max_lens["FileName"]:
-        max_lens["FileName"] = l
     else:
       err="Unknown line: %s"%l
       return (0,err)
+  l = len(filename)
+  if l > max_lens["FileName"]:
+    max_lens["FileName"] = l
   return (1,tags)
 
 def print_tags_from_all_files(ok_tags, max_len, all_files, info, verbose):
