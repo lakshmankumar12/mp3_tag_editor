@@ -18,6 +18,10 @@ def initialize():
 
 
 def grab_tags_of_file(max_lens, filename):
+  ''' Given a filename, grabs all the tags in it, and return a (success/fail,dict-of-tags-to-values)
+
+      max_lens is a dict of (tags->max-len-of-values) . This is updated in case this file's info exceeds the existing max-len
+  '''
   tags = {}
   v2_frame_pattern=r'([A-Z0-9]{4}) \(.*: (.*)'
   a = subprocess.Popen(["id3v2","-l",filename],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
