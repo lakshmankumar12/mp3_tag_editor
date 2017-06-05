@@ -1,92 +1,59 @@
 #!/usr/bin/python
 
+'''
+  This can strip the start and end seconds from one file to another.
+
+  It uses convert for that. covert does preserve album art but leaves
+  all other tags empty! So, this can copy the tags from src to dest.
+  You can also use this just to copy tags
+'''
+
 from __future__ import print_function
-import sys
-import subprocess
+
 import argparse
+import subprocess
 import os
-import re
-import shutil
-from find_tags_of_files import initialize
-from find_tags_of_files import grab_tags_of_file
+import sys
+import mutagen
+import mutagen.id3
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--ss", help="start time in HH:MM:SS")
-parser.add_argument("--to", help="end time in HH:MM:SS")
-parser.add_argument("file",  help="file")
+parser.add_argument("-u","--update",   help="update same file. dest arg is ignored", action="store_true")
+parser.add_argument("--ss",  help="start time")
+parser.add_argument("--to",  help="end time")
+parser.add_argument("src",   help="src file")
+parser.add_argument("dest",  help="dest file", nargs='?')
+
 parsed_args = parser.parse_args()
 
-if not parsed_args.ss and not parsed_args.to:
-    print("You should supply at least a start or end time");
+if parsed_args.update:
+    (filename,extension) = os.path.splitext(parsed_args.src)
+    parsed_args.dest=filename+'-new'+extension
+elif not parsed_args.dest:
+    print ("You should either specify --update or a dest file")
     sys.exit(1)
 
-ok_tags = initialize()
-maxlen_dict = {}
-maxlen_dict["FileName"] = 0
-(ok,tags) = grab_tags_of_file(maxlen_dict, parsed_args.file)
+if os.path.exists(parsed_args.dest):
+    print ("'%s' already exists. rm it first"%parsed_args.dest)
+    sys.exit(1)
 
-temp_file = "temp.mp3"
-temp_cover_dir = "temp_cover_dir"
+if parsed_args.ss or parsed_args.to:
+    cmd="avconv -i '%s' -acodec copy -vn "%parsed_args.src
+    if parsed_args.ss:
+        cmd+='-ss %s '%parsed_args.ss
+    if parsed_args.to:
+        cmd+='-to %s '%parsed_args.to
+    cmd+="'%s'"%parsed_args.dest
+    print ("Executing :%s"%cmd)
+    os.system(cmd)
 
-if os.path.isfile(temp_file):
-    os.remove(temp_file)
+src=mutagen.id3.ID3(parsed_args.src, v2_version=3)
+dest=mutagen.id3.ID3(parsed_args.dest, v2_version=3)
+for k in src:
+    dest[k] = src[k]
+dest.save(v2_version=3)
 
-if os.path.isdir(temp_cover_dir):
-    shutil.rmtree(temp_cover_dir)
+if parsed_args.update:
+    cmd = "mv '%s' '%s'"%(parsed_args.dest,parsed_args.src)
+    os.system(cmd)
 
-cmd = ["avconv","-i",parsed_args.file]
-if parsed_args.ss:
-    cmd.append("-ss")
-    cmd.append(parsed_args.ss)
-if parsed_args.to:
-    cmd.append("-to")
-    cmd.append(parsed_args.to)
-cmd.extend(["-acodec","copy",temp_file])
-print("Executing:",end="")
-print(' '.join(cmd))
-a = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-op_out,op_err = a.communicate()
-a.wait()
-print ("Got:%s, err:%s"%(op_out,op_err))
-
-cmd = ["id3v2","-2"]
-for i in tags:
-    if i == "V1":
-        continue
-    if i == "APIC":
-        continue
-    if i == "TCON":
-        tags[i] = re.sub("\s+\(.*\)","",tags[i])
-    cmd.append("--"+i)
-    cmd.append(str(tags[i]))
-cmd.append(temp_file)
-print("Executing:",end="")
-print(' '.join(cmd))
-a = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-op_out,op_err = a.communicate()
-a.wait()
-print ("Got:%s, err:%s"%(op_out,op_err))
-
-os.makedirs(temp_cover_dir)
-cmd = ['eyeD3','--write-images',temp_cover_dir,parsed_args.file]
-print("Executing:",end="")
-print(' '.join(cmd))
-a = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-op_out,op_err = a.communicate()
-a.wait()
-print ("Got:%s, err:%s"%(op_out,op_err))
-
-a=os.path.join(temp_cover_dir,"FRONT_COVER.jpg")
-if not os.path.exists(a):
-    print("Oops! FRONT_COVER.jpg wasn't extracted")
-else:
-    cmd = ['eyeD3','-2','--add-image',a+':FRONT_COVER',temp_file]
-    print("Executing:",end="")
-    print(' '.join(cmd))
-    a = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    op_out,op_err = a.communicate()
-    a.wait()
-    print ("Got:%s, err:%s"%(op_out,op_err))
-
-os.rename(parsed_args.file,parsed_args.file[:-4]+"-back.mp3")
-os.rename(temp_file, parsed_args.file)
