@@ -3,7 +3,7 @@
 '''
   This can strip the start and end seconds from one file to another.
 
-  It uses convert for that. covert does preserve album art but leaves
+  It uses avconv for that. avconv does preserve album art but leaves
   all other tags empty! So, this can copy the tags from src to dest.
   You can also use this just to copy tags
 '''
@@ -38,12 +38,18 @@ if os.path.exists(parsed_args.dest):
     sys.exit(1)
 
 if parsed_args.ss or parsed_args.to:
-    cmd="avconv -i '%s' -acodec copy -vn "%parsed_args.src
+    if "'" in parsed_args.src:
+        s = '"%s"'%parsed_args.src
+        d = '"%s"'%parsed_args.dest
+    else:
+        s = "'%s'"%parsed_args.src
+        d = "'%s'"%parsed_args.dest
+    cmd="avconv -i %s -acodec copy -vn "%s
     if parsed_args.ss:
         cmd+='-ss %s '%parsed_args.ss
     if parsed_args.to:
         cmd+='-to %s '%parsed_args.to
-    cmd+="'%s'"%parsed_args.dest
+    cmd+="%s"%d
     print ("Executing :%s"%cmd)
     os.system(cmd)
 
@@ -54,6 +60,7 @@ for k in src:
 dest.save(v2_version=3)
 
 if parsed_args.update:
-    cmd = "mv '%s' '%s'"%(parsed_args.dest,parsed_args.src)
+    cmd = "mv %s %s"%(d,s)
+    print ("Executing :%s"%cmd)
     os.system(cmd)
 

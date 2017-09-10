@@ -29,7 +29,7 @@ def grab_tags_of_file(max_lens, filename):
   a.wait()
   if op_err:
     return (0,op_err)
-  lines = op_out.split('\n')
+  lines = op_out.decode().split('\n')
   for l in lines:
     if not l:
       continue
