@@ -44,9 +44,30 @@ def grab_tags_of_file(max_lens, filename):
       tags['V1'] = 1
       continue
     if 'Title  :' in l and 'Artist:' in l:
-      continue
+       title_art_pattern=r'Title  :(.*)Artist: (.*)'
+       m = re.search(title_art_pattern,l)
+       if m:
+        val=m.group(1).strip()
+        if val:
+          tags['V1-Title']=val
+        val=m.group(2).strip()
+        if val:
+          tags['V1-Artist']=val
+       continue
     if 'Album  :' in l and 'Year:' in l and 'Genre:' in l:
-      continue
+       album_year_pattern=r'Album  :(.*)Year:(.*), Genre: .* \((\d)+\)'
+       m = re.search(album_year_pattern,l)
+       if m:
+           val=m.group(1).strip()
+           if val:
+               tags['V1-Album']=val
+           val=m.group(2).strip()
+           if val:
+               tags['V1-Year']=val
+           val=m.group(3).strip()
+           if val:
+               tags['V1-Genre']=val
+       continue
     if 'Comment:' in l and tags['V1'] == 1:
       continue
     if 'No ID3v1 tag' in l:

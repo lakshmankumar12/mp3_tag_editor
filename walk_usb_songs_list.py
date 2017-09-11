@@ -14,6 +14,8 @@ def get_mp3_songs_info(root_path, max_file):
         Prepares a dict of full_path -> (basename,path,title,album,artist,alb-artist)
         Also returns the non mp3 files in (non_mp3)
         Also returns bad mp3 files in (bad_mp3)
+
+        Internal function. Used dump_mp3_songs_info() the wrapper
     '''
     non_mp3=[]
     bad_mp3=[]
@@ -46,6 +48,10 @@ def get_mp3_songs_info(root_path, max_file):
     return mp3_files,bad_mp3,non_mp3
 
 def dump_mp3_songs_info(root_path, json_path, json_prefix, max_file=100):
+    '''
+        Given a root-path, json-path/prefix, it dumps all mp3-files in root-path
+        as a json file in json file. You should find 3 files - good, bad, non
+    '''
     (good,bad,non) = get_mp3_songs_info(root_path, max_file)
     goodfile = os.path.join(json_path, json_prefix+'good.json')
     badfile = os.path.join(json_path, json_prefix+'bad.json')
@@ -55,6 +61,18 @@ def dump_mp3_songs_info(root_path, json_path, json_prefix, max_file=100):
             json.dump(ob,fd,indent=4)
 
 def load_good_file_info(json_file, dump_result=None):
+    '''
+        This is just a helper function. You dont have to call it directly.
+
+        When given a json/dict of "path": (basenames, titles, albums) .. it gives
+        a grander dict, with keys:
+            full_json -> the input json
+            basename  -> dict of basenames to all paths that have this basename
+            TIT2      -> ...    titles
+            TALB      -> ...    titles
+            TPE1      -> ...    titles
+            TPE2      -> ...    titles
+    '''
     with open(json_file, 'r') as fd:
         good = json.load(fd)
     basenames = collections.defaultdict(list)
