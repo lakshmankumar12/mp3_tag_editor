@@ -8,7 +8,7 @@ import json
 import collections
 from fuzzywuzzy import fuzz,process
 
-def get_mp3_songs_info(root_path, max_file):
+def get_mp3_songs_info(root_path, max_file, use_v1_on_absent_v2):
     '''
         walk the root_path and scans all mp3 files in it.
         Prepares a dict of full_path -> (basename,path,title,album,artist,alb-artist)
@@ -43,16 +43,23 @@ def get_mp3_songs_info(root_path, max_file):
             for tag in ['TIT2','TALB','TPE1','TPE2']:
                 if tag in tags:
                     file_info[tag] = tags[tag]
+            if use_v1_on_absent_v2:
+                if not 'TIT2' in tags and 'V1-Title' in tags:
+                    file_info['TIT2'] = tags['V1-Title']
+                if not 'TALB' in tags and 'V1-Album' in tags:
+                    file_info['TALB'] = tags['V1-Album']
+                if not 'TPE1' in tags and not 'TPE2' in tags and 'V1-Artist' in tags:
+                    file_info['TPE1'] = tags['V1-Artist']
             mp3_files[filename] = file_info
             count += 1
     return mp3_files,bad_mp3,non_mp3
 
-def dump_mp3_songs_info(root_path, json_path, json_prefix, max_file=100):
+def dump_mp3_songs_info(root_path, json_path, json_prefix, max_file=100, use_v1_on_absent_v2=False):
     '''
         Given a root-path, json-path/prefix, it dumps all mp3-files in root-path
         as a json file in json file. You should find 3 files - good, bad, non
     '''
-    (good,bad,non) = get_mp3_songs_info(root_path, max_file)
+    (good,bad,non) = get_mp3_songs_info(root_path, max_file, use_v1_on_absent_v2)
     goodfile = os.path.join(json_path, json_prefix+'good.json')
     badfile = os.path.join(json_path, json_prefix+'bad.json')
     nonfile = os.path.join(json_path, json_prefix+'non.json')
