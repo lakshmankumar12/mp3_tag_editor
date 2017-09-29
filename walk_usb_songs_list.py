@@ -58,6 +58,8 @@ def dump_mp3_songs_info(root_path, json_path, json_prefix, max_file=100, use_v1_
     '''
         Given a root-path, json-path/prefix, it dumps all mp3-files in root-path
         as a json file in json file. You should find 3 files - good, bad, non
+
+        The good file has a dict of (path->(tags of the song))
     '''
     (good,bad,non) = get_mp3_songs_info(root_path, max_file, use_v1_on_absent_v2)
     goodfile = os.path.join(json_path, json_prefix+'good.json')
@@ -103,10 +105,23 @@ def load_good_file_info(json_file, dump_result=None):
 
 def compare_lists(reference_file, check_file):
     '''
+        You should supply as input the good-file prepared by dump_mp3_songs_info()
+
+        It then calls load_good_file_info() to prepare the curated data-structure.
         Takes each entry in the check_dict and tries to get a best match from good-dict.
+
         If an unambiguous match is found its kept in unambigous (check-path --> good-path)
         In no matches are found , its kept in        nomatches  (check-path)
         If ambiguos matches are foudn, its kept in   ambiguous  (check-path -> [ .. potential good-paths.. ])
+
+        Its recommended to do a verify_matches() after this
+
+        How matching is done:
+            * extracts basename matches
+            * extracts title matches
+            * extracts album matches
+            * adds each match in a dict of path->count.
+            * The max-count is taken if that's unambiguous otherwise gives up
     '''
     reference_info = load_good_file_info(reference_file)
     check_info = load_good_file_info(check_file)
@@ -164,6 +179,18 @@ def compare_lists(reference_file, check_file):
 
 
 def verify_matches(reference_json, check_json, matches):
+    '''
+        Takes the full_json of reference and check and match
+        For each match having a mapping from check->reference,
+        it categories that under (a match if ration is >90)
+           all_match (title, album, artist, alb-artist)
+           three_match
+           two_match
+           one_match
+           zero_match
+           fishy (any ration less than 70)
+        Note that ration values between 71->90 are neither considered fishy nor match
+    '''
     result = {}
     result['all_match'] = {}
     result['three_match'] = {}
