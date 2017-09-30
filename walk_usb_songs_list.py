@@ -177,6 +177,46 @@ def compare_lists(reference_file, check_file):
             not_found.append(check_full_path)
     return (found,not_found)
 
+def prepare_reference_work_info(reference_file):
+    '''
+    Take a good-info json file and prepares all working dicts
+    to be used later by get_matching_entry
+    '''
+    reference_info = load_good_file_info(reference_file)
+    ref=lambda: None
+    setattr(ref,'info', reference_info)
+    setattr(ref,'basenames', reference_info['basename'].keys())
+    setattr(ref,'titles', reference_info['TIT2'].keys())
+    setattr(ref,'albums', reference_info['TALB'].keys())
+    setattr(ref,'artists', reference_info['TPE1'].keys())
+    setattr(ref,'albartists', reference_info['TPE2'].keys())
+    return ref
+
+
+def get_matching_entry(ref, title, album, artist=None, albArtist=None, basename=None):
+    def work_on_entry(final, toLook, refList, refMainDict):
+        if toLook:
+            results = process.extract(toLook,refList)
+            results = [ i[0] for i in results if i[1] > 70 ]
+            for i in results:
+                for path in refMainDict[i]:
+                    final[path] += 1
+        return None
+    final = collections.defaultdict(int)
+    work_on_entry(final, title, ref.titles, ref.info['TIT2'])
+    work_on_entry(final, album, ref.albums, ref.info['TALB'])
+    if artist:
+        work_on_entry(final, artist, ref.artists, ref.info['TPE1'])
+    if albArtist:
+        work_on_entry(final, albArtist, ref.albartists, ref.info['TPE2'])
+    if basename:
+        work_on_entry(final, basename, ref.basenames, ref.info['basename'])
+    max_occurance = max(final.values())
+    max_keys = [ k for k in final if final[k] == max_occurance]
+    if len(max_keys) == 1:
+        return max_keys[0]
+    else:
+        return None
 
 def verify_matches(reference_json, check_json, matches):
     '''
