@@ -17,6 +17,7 @@ parser.add_argument("-r","--albumartist",  help="album artist")
 parser.add_argument("-g","--genre",  help="genre")
 parser.add_argument("-y","--year",  help="year")
 parser.add_argument("-n","--trackno",  help="track no")
+parser.add_argument("-c","--cover",  help="picture")
 parser.add_argument("--nodv1",      help="dont delete v1")
 parser.add_argument("--nodoth",      help="dont delete other tags")
 parser.add_argument("file",  help="file")
@@ -25,7 +26,7 @@ parsed_args = parser.parse_args()
 
 existing_tags= mutagen.id3.ID3(parsed_args.file, v2_version=3)
 
-from mutagen.id3 import TIT2, TALB, TPE1, TPE2, TCON, TYER, TRCK
+from mutagen.id3 import TIT2, TALB, TPE1, TPE2, TCON, TYER, TRCK, APIC
 
 good_tags     = [ "TIT2",  "TALB",  "TPE1",   "TPE2",        "TCON",  "TYER", "TRCK",  ]
 good_tags_ctr = [ TIT2,    TALB,    TPE1,     TPE2,          TCON,    TYER,   TRCK  ]
@@ -46,7 +47,11 @@ for tag,arg,ctr in zip(good_tags,args,good_tags_ctr):
 
 if "APIC" in existing_tags:
     new_tags["APIC"] = existing_tags["APIC"]
-
+elif parsed_args.cover:
+    if parsed_args.cover.upper().endswith("JPG") or parsed_args.cover.upper().endswith("JPEG"):
+        with open (parsed_args.cover,"r") as fd:
+            new_tags["APIC"] = APIC(encoding=3, mime='image/jpeg', type=3,
+                                    desc=u'Front Cover', data=fd.read())
 existing_tags.delete()
 existing_tags.save(v2_version=3)
 
