@@ -8,7 +8,6 @@ This just prints the current play queue from that!
 
 import bs4
 import sys
-import pdb
 
 souped = None
 with open ('/tmp/a.html','r') as fd:
