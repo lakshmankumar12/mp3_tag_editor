@@ -32,6 +32,7 @@ def addSongtoCategory(category, song):
         fd.write(line)
 
 def buildAllSongsList(categories):
+    total_cnt = 0
     songsList = collections.defaultdict(dict)
     for cat in categories:
         filename = os.path.join(SaavnSortedDir, cat)
@@ -44,15 +45,17 @@ def buildAllSongsList(categories):
                     artist = fields[1]
                     album = fields[2]
                     if album in songsList:
-                        if title in songsList:
+                        if title in songsList[album]:
                             continue
                         else:
                             songsList[album][title] = cat
+                            total_cnt += 1
                     else:
                         songsList[album][title] = cat
+                        total_cnt += 1
         except FileNotFoundError:
             pass
-    return songsList
+    return (songsList, total_cnt)
 
 def askChoice(song, categories):
     print ("What's your category for song:")
@@ -115,8 +118,9 @@ def parseScrobbleFile(scrobbleName):
 
 def main():
     categories = getCategories(os.path.join(SaavnSortedDir,categoryFile))
-    classified_songs = buildAllSongsList(categories)
+    classified_songs, total_cnt = buildAllSongsList(categories)
     scrobbedSongs = parseScrobbleFile(SaavnScrobbleFile)
+    new_count = 0
     for s in scrobbedSongs:
         a = s['album']
         t = s['title']
@@ -125,6 +129,8 @@ def main():
                 print ("Found {} :{} in {}".format(t,a,classified_songs[a][t]))
                 continue
         askChoice(s, categories)
+        new_count += 1
+    print ("There were {} classfied songs and now you classified {} songs".format(total_cnt, new_count))
 
 
 main()
