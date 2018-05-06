@@ -28,7 +28,8 @@ def addCategory(catgyFileName, newCategory, existCategories):
 
 def addSongtoCategory(category, song):
     fileName = os.path.join(SaavnSortedDir, category)
-    line = song['title'] + '`' + song['artist'] + '`' + song['album'] + '\n'
+    line = '`'.join([song['title'],song['artist'],song['album'],song['permaUrl']])
+    line += '\n'
     with open (fileName, 'a') as fd:
         fd.write(line)
 
@@ -43,7 +44,6 @@ def buildAllSongsList(categories):
                     line = line.strip()
                     fields = line.split('`')
                     title = fields[0]
-                    artist = fields[1]
                     album = fields[2]
                     if album in songsList:
                         if title in songsList[album]:
@@ -114,6 +114,9 @@ def parseScrobbleFile(scrobbleName):
             song['title'] = fields[1]
             song['artist'] = fields[2]
             song['album'] = fields[3]
+            song['permaUrl'] = ""
+            if len(fields) > 4:
+                song['permaUrl'] = fields[4]
             scrobbledSongs.append(song)
     return scrobbledSongs
 
