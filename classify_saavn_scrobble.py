@@ -4,6 +4,7 @@
 import sys
 import os
 import collections
+import argparse
 
 SaavnScrobbleFile='/Users/lakshman.narayanan/Downloads/songs-download/saavn/saavnScrobble.txt'
 SaavnSortedDir='/Users/lakshman.narayanan/Downloads/songs-download/saavn/'
@@ -92,7 +93,7 @@ def askChoice(song, categories):
             ok = input ("yes?")
             if ok == 'yes' or ok == 'y':
                 catFile = os.path.join(SaavnSortedDir, categoryFile)
-                addCategory(categoryFile, catName, categories)
+                addCategory(catFile, catName, categories)
                 chosenCategory = catName
                 break;
         if ok_attempt > 3:
@@ -117,6 +118,12 @@ def parseScrobbleFile(scrobbleName):
     return scrobbledSongs
 
 def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", help="print parsed files too", action="store_true")
+
+    cmd_options = parser.parse_args()
+
     categories = getCategories(os.path.join(SaavnSortedDir,categoryFile))
     classified_songs, total_cnt = buildAllSongsList(categories)
     scrobbedSongs = parseScrobbleFile(SaavnScrobbleFile)
@@ -126,7 +133,8 @@ def main():
         t = s['title']
         if a in classified_songs:
             if t in classified_songs[a]:
-                print ("Found {} :{} in {}".format(t,a,classified_songs[a][t]))
+                if cmd_options.debug:
+                    print ("Found {} :{} in {}".format(t,a,classified_songs[a][t]))
                 continue
         askChoice(s, categories)
         new_count += 1
