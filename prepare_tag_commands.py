@@ -46,6 +46,7 @@ def process_id3(filename):
       cmd += '--%s "%s" '%(t,v)
     cmd += ' "%s"'%values[0]
     print(cmd)
+    print('id3v2 -s "%s"'%values[0])
 
 usage='''
 The file should have a title line

@@ -2,16 +2,30 @@
 # -*- coding: utf-8 -*-
 
 '''
-We assume there is a /tmp/a.html that contains current saavn playing page.
-This just prints the current play queue from that!
+Print's current saavn playing page's playqueue.
 '''
 
 import bs4
 import sys
+sys.path.append('/Users/lakshman.narayanan/github/mac_scripts')
+import mac_script_helper
+from colorama import Fore, Back, Style
 
-souped = None
-with open ('/tmp/a.html','r') as fd:
-    souped = bs4.BeautifulSoup(fd.read(), 'html.parser')
+js = [
+      mac_script_helper.SaveDocCmd,
+     ]
+bwsrTab = mac_script_helper.BrowserTab('https://www.saavn.com')
+err,page,_ = bwsrTab.sendCommands(js)
+if err != 0:
+    print ("Trouble in getting page-info from saavn")
+    sys.exit(1)
+
+if len (page.strip()) == 0:
+    sys.exit(1)
+
+souped = bs4.BeautifulSoup(page, 'html.parser')
+with open ('/tmp/a.html','w') as fd:
+    fd.write(souped.prettify())
 
 drawer = souped.find("ol", {"id": "drawer-queue-group"})
 if not drawer:
@@ -39,7 +53,9 @@ for li in li_items:
 for n,(t,a,p) in enumerate(tracks,1):
     if p:
         st="*"
+        style = Fore.RED
     else:
         st=" "
-    print (" {:3}{:1} . {:{width}}  | {} ".format(n, st, t, a, width=maxwidth))
+        style = ""
+    print (style + " {:3}{:1} . {:{width}}  | {} ".format(n, st, t, a, width=maxwidth) + Style.RESET_ALL)
 
