@@ -139,6 +139,7 @@ def main():
     classified_songs, total_cnt = buildAllSongsList(cmd_options.sortedDir, categories)
     scrobbedSongs = parseScrobbleFile(cmd_options.scrobbleFile)
     new_count = 0
+    toClassify = []
     for s in scrobbedSongs:
         a = s['album']
         t = s['title']
@@ -146,6 +147,15 @@ def main():
             if t in classified_songs[a]:
                 if cmd_options.debug:
                     print ("Found {} :{} in {}".format(t,a,classified_songs[a][t]))
+                continue
+        toClassify.append(s)
+    print ("{} unknown out of {}".format(len(toClassify), total_cnt))
+    total_cnt = len(toClassify)
+    for s in toClassify:
+        a = s['album']
+        t = s['title']
+        if a in classified_songs:
+            if t in classified_songs[a]:
                 continue
         carryOn = askChoice(cmd_options.sortedDir, s, categories, classified_songs)
         if not carryOn:
