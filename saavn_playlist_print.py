@@ -9,6 +9,7 @@ import bs4
 import sys
 import json
 from html import unescape
+import argparse
 
 sys.path.append('/Users/lakshman.narayanan/github/mac_scripts')
 import mac_script_helper
@@ -70,10 +71,26 @@ def printScreenFriendly(maxwidths, tracks):
     for n,(t,r,a,y,l) in enumerate(tracks,1):
         print (" {:3} . {:{titwidth}} | {:{artwidth}} | {:{albwidth}} | {} | {}".format(n, t, r, a, y, l, titwidth=tw, artwidth=rw, albwidth=aw))
 
+def dumpTracksInFile(tracks, filename):
+    with open(filename, 'w') as fd:
+        for t,r,a,y,l in tracks:
+            print ('{}`{}`{}`{}'.format(t,r,a,l), file=fd)
+
 def main():
     souped = getSaavnPage()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f","--file", help="write to file", default="/tmp/saavn-playlist")
+    parser.add_argument("-s","--screen", help="write to screen", action="store_true")
+    cmd_options = parser.parse_args()
+
     widths, tracks = getSongsList(souped)
-    printScreenFriendly(widths, tracks)
+
+    if cmd_options.file:
+        dumpTracksInFile(tracks, cmd_options.file)
+
+    if cmd_options.screen:
+        printScreenFriendly(widths, tracks)
 
 if __name__ == "__main__":
     main()
