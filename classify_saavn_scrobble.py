@@ -6,8 +6,8 @@ import os
 import collections
 import argparse
 
-SaavnScrobbleFile='/Users/lakshman.narayanan/Downloads/songs-download/saavn/saavnScrobble.txt'
-SaavnSortedDir='/Users/lakshman.narayanan/Downloads/songs-download/saavn/'
+SaavnScrobbleFile='/Users/lakshman.narayanan/Downloads/songs-download/JUST-PLAYLISTS-TEXT/saavn/saavnScrobble.txt'
+SaavnSortedDir='/Users/lakshman.narayanan/Downloads/songs-download/JUST-PLAYLISTS-TEXT/saavn/'
 categoryFile='Categories.txt'
 
 def getCategories(catgyFileName):
@@ -71,11 +71,14 @@ def askChoice(sortedDir, song, categories, classified_songs):
     for n,cat in enumerate(categories,1):
         print ("{} . {}".format(n,cat))
         maxN = n
+    print ("Type 0 to add a new category, - to skip this and move on, ^c to quit")
     chosen = None
     ok_attempt = 1
     while ok_attempt <= 3:
         try:
             choice = input("Choice (Type {} to exit):".format(maxN+1))
+            if choice == '-':
+                return True
             choice = int(choice)
             if choice < 0 or choice > maxN+1:
                 print ("Enter a valid number 0 - {}".format(maxN+1))

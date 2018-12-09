@@ -55,9 +55,7 @@ for tag,arg,ctr in zip(good_tags,args,good_tags_ctr):
     elif current_value:
         new_tags[tag] = current_value
 
-if "APIC" in existing_tags:
-    new_tags["APIC"] = existing_tags["APIC"]
-elif cmd_options.cover:
+if cmd_options.cover:
     if cmd_options.cover.upper().endswith("JPG") or cmd_options.cover.upper().endswith("JPEG"):
         with open (cmd_options.cover,"rb") as fd:
             new_tags["APIC"] = APIC(encoding=3, mime='image/jpeg', type=3,
@@ -71,6 +69,8 @@ elif cmd_options.coverlink:
     with open ("cover.jpg","rb") as fd:
         new_tags["APIC"] = APIC(encoding=3, mime='image/jpeg', type=3,
                                 desc='Front Cover', data=fd.read())
+elif u"APIC:" in existing_tags:
+    new_tags[u"APIC:"] = existing_tags[u"APIC:"]
 
 if not new_tag:
     existing_tags.delete()

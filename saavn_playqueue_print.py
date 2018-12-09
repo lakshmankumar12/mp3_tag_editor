@@ -14,7 +14,7 @@ from colorama import Fore, Back, Style
 js = [
       mac_script_helper.SaveDocCmd,
      ]
-bwsrTab = mac_script_helper.BrowserTab('https://www.saavn.com')
+bwsrTab = mac_script_helper.BrowserTab('https://www.jiosaavn.com')
 err,page,_ = bwsrTab.sendCommands(js)
 if err != 0:
     print ("Trouble in getting page-info from saavn")

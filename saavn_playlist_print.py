@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-We assume there is a /tmp/a.html that contains a playlist in display
-This just prints the songs from that playlist.
+This prints the songs in a current play-list displayed in saavn page.
 '''
 
 import bs4
@@ -11,9 +10,25 @@ import sys
 import json
 from html import unescape
 
-souped = None
-with open ('/tmp/a.html','r') as fd:
-    souped = bs4.BeautifulSoup(fd.read(), 'html.parser')
+sys.path.append('/Users/lakshman.narayanan/github/mac_scripts')
+import mac_script_helper
+from colorama import Fore, Back, Style
+
+js = [
+      mac_script_helper.SaveDocCmd,
+     ]
+bwsrTab = mac_script_helper.BrowserTab('https://www.jiosaavn.com')
+err,page,_ = bwsrTab.sendCommands(js)
+if err != 0:
+    print ("Trouble in getting page-info from saavn")
+    sys.exit(1)
+
+if len (page.strip()) == 0:
+    sys.exit(1)
+
+souped = bs4.BeautifulSoup(page, 'html.parser')
+with open ('/tmp/a.html','w') as fd:
+    fd.write(souped.prettify())
 
 trackList = souped.find("ol", {"class": "track-list"})
 if not trackList:
@@ -25,6 +40,7 @@ li_items = trackList.findAll('li', recursive=False)
 tracks = []
 titmaxwidth = 10
 albmaxwidth = 10
+artmaxwidth = 10
 for li in li_items:
     songJsonStr = li.find('div', {"class": "song-json"})
     if not songJsonStr:
@@ -33,12 +49,15 @@ for li in li_items:
     songJsonStr = songJsonStr.get_text()
     songInfo = json.loads(songJsonStr)
     title = unescape(songInfo['title'])
+    artist = unescape(songInfo['singers'])
     album = unescape(songInfo['album'])
     year = unescape(songInfo['year'])
+    link = unescape(songInfo['perma_url'])
     titmaxwidth = max(titmaxwidth, len(title))
+    artmaxwidth = max(artmaxwidth, len(artist))
     albmaxwidth = max(albmaxwidth, len(album))
-    tracks.append((title,album,year))
+    tracks.append((title,artist,album,year,link))
 
-for n,(t,a,y) in enumerate(tracks,1):
-    print (" {:3} . {:{titwidth}}  | {:{albwidth}} | {}".format(n, t, a, y, titwidth=titmaxwidth, albwidth=albmaxwidth))
+for n,(t,r,a,y,l) in enumerate(tracks,1):
+    print (" {:3} . {:{titwidth}} | {:{artwidth}} | {:{albwidth}} | {} | {}".format(n, t, r, a, y, l, titwidth=titmaxwidth, artwidth=artmaxwidth, albwidth=albmaxwidth))
 

@@ -23,7 +23,7 @@ def get_mp3_songs_info(root_path, max_file, use_v1_on_absent_v2):
     max_lens = {}
     max_lens["FileName"] = 0
     count = 0
-    for subdir, dirs, files in os.walk(root_path):
+    for subdir, dirs, files in os.walk(root_path, followlinks=True):
         if count > max_file:
             break
         for i in files:
@@ -282,6 +282,80 @@ def verify_matches(reference_json, check_json, matches):
         result[where][i] = res
     return result
 
+def findSongsInMyCollection(reference_file, matched_store, toCheck):
+    '''
+        reference_file : the good-file prepared by dump_mp3_songs_info()
+        matched_store  : json file having already mapped results
+        toCheck        : json containing list of [{'TIT2','TALB'}] dicts
+
+        returns (found/notfound) containing ({'TIT2','TALB'},path)
+                        path is a single result in found
+                             and a list(empty too) in not-found
+    '''
+    with open(matched_store,'r') as fd:
+        matched_store_info = json.load(fd)
+    reference_info = load_good_file_info(reference_file)
+    all_reference_titles = reference_info['TIT2'].keys()
+    all_reference_albums = reference_info['TALB'].keys()
+    found = []
+    notfound = []
+    count = 0
+    for track in toCheck:
+        count += 1
+        title = track['TIT2']
+        album = track['TALB']
+        if album in matched_store_info:
+            if title in matched_store_info[album]:
+                print ("{}. {}, {} is already matched".format(count, title, album))
+                continue
+        title_results = process.extract(title, all_reference_titles)
+        albums_results = process.extract(album, all_reference_albums)
+
+        title_results = [ i[0] for i in title_results if i[1] > 80 ]
+        albums_results = [ i[0] for i in albums_results if i[1] > 80 ]
+
+        all_paths = collections.defaultdict(int)
+        for i in title_results:
+            for path in reference_info['TIT2'][i]:
+                all_paths[path] += 1
+        for i in albums_results:
+            for path in reference_info['TALB'][i]:
+                all_paths[path] += 1
+
+        if not all_paths:
+            notfound.append((track, []))
+            continue
+
+        max_occurance = max(all_paths.values())
+        max_keys = [ k for k in all_paths if all_paths[k] == max_occurance]
+
+        if len(max_keys) == 1:
+            print("{}. {},{} matched to {}".format(count, title, album, max_keys[0]))
+            found.append((track,max_keys[0]))
+        else:
+            print("{}. {},{} didn't to {}".format(count, title, album, max_keys[0]))
+            notfound.append((track, max_keys))
+    return found,notfound
+
+def writeFoundNotFoundListsToFile(f,nf,foundFileName,notFoundFileName):
+    foundReOrged = {}
+    for track in f:
+        a = track[0]['TALB']
+        t = track[0]['TIT2']
+        if a not in foundReOrged:
+            foundReOrged[a] = {}
+        foundReOrged[a][t] = track[1]
+    notFoundReorged = {}
+    for track in nf:
+        a = track[0]['TALB']
+        t = track[0]['TIT2']
+        if a not in notFoundReorged:
+            notFoundReorged[a] = {}
+        notFoundReorged[a][t] = track[1]
+    with open(foundFileName,'w') as fd:
+        json.dump(foundReOrged,fd,indent=4)
+    with open(notFoundFileName,'w') as fd:
+        json.dump(notFoundReorged,fd,indent=4)
 
 
 if __name__ == '__main__':
