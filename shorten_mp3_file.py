@@ -20,6 +20,7 @@ import mutagen.id3
 parser = argparse.ArgumentParser()
 parser.add_argument("-u","--update",   help="update same file. dest arg is ignored", action="store_true")
 parser.add_argument("--cptag",   help="just copy tags from one file to antoher", action="store_true")
+parser.add_argument("--cpcover", help="just copy APIC tag alone one file to antoher", action="store_true")
 parser.add_argument("--ss",  help="start time")
 parser.add_argument("--to",  help="end time")
 parser.add_argument("src",   help="src file")
@@ -37,16 +38,16 @@ elif not parsed_args.dest:
     print ("You should either specify --update or a dest file")
     sys.exit(1)
 
-if parsed_args.cptag and parsed_args.update:
+if (parsed_args.cptag or parsed_args.cpcover) and parsed_args.update:
     print ("If --cptag is given an explicit existing destionation should be given")
     sys.exit(1)
 
-if parsed_args.cptag:
+if parsed_args.cptag or parsed_args.cpcover:
     if not os.path.exists(parsed_args.dest):
         print ("'%s' doesn't already exist."%parsed_args.dest)
         sys.exit(1)
     if parsed_args.ss or parsed_args.to:
-        print ("when --cptag we dont update time. If you want to update time, tags are automatically cp'ed into the new file")
+        print ("when --cptag or --cpcover we dont update time. If you want to update time, tags are automatically cp'ed into the new file")
         sys.exit(1)
 else:
     if os.path.exists(parsed_args.dest):
@@ -71,6 +72,20 @@ if parsed_args.ss or parsed_args.to:
 
 src=mutagen.id3.ID3(parsed_args.src, v2_version=3)
 dest=mutagen.id3.ID3(parsed_args.dest, v2_version=3)
+
+if parsed_args.cpcover:
+    to_use_key = None
+    for k in src.keys():
+        if "APIC" in k or u"APIC" in k:
+            to_use_key = k
+    if not to_use_key:
+        print ("Source doesn't have APIC tag!")
+        print ("Keys:{}".format(src.keys()))
+        sys.exit(1)
+    dest[to_use_key] = src[to_use_key]
+    dest.save(v2_version=3)
+    sys.exit(0)
+
 dest.delete()
 dest.save(v2_version=3)
 dest=mutagen.id3.ID3(parsed_args.dest, v2_version=3)
