@@ -6,7 +6,7 @@ import sys
 import re
 import argparse
 
-ok_tags_values=['TIT2', 'TALB', 'TPE1',  'TPE2',      'TCON', 'TRCK', 'APIC','TYER','V1']
+ok_tags_values=['TT2', 'TAL', 'TP1',  'TP2',      'TCO', 'TRK', 'APIC','TYE','V1']
 ok_tags_names= ['Title','Album','Artist','Alb Artist','Genre','Track','Pic', 'Year','V1']
 ok_tags_default_values= [25,25,25,25,25,10,10,3,3]
 
@@ -23,7 +23,7 @@ def grab_tags_of_file(max_lens, filename):
       max_lens is a dict of (tags->max-len-of-values) . This is updated in case this file's info exceeds the existing max-len
   '''
   tags = {}
-  v2_frame_pattern=r'([A-Z0-9]{4}) \(.*: (.*)'
+  v2_frame_pattern=r'([A-Z0-9]{3,4}) \(.*: (.*)'
   a = subprocess.Popen(["id3v2","-l",filename],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
   op_out,op_err = a.communicate()
   a.wait()

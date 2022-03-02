@@ -61,7 +61,7 @@ if parsed_args.ss or parsed_args.to:
     else:
         s = "'%s'"%parsed_args.src
         d = "'%s'"%parsed_args.dest
-    cmd="avconv -i %s -acodec copy -vn "%s
+    cmd="ffmpeg -i %s -acodec copy -vn "%s
     if parsed_args.ss:
         cmd+='-ss %s '%parsed_args.ss
     if parsed_args.to:
